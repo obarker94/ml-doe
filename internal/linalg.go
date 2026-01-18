@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"errors"
 	"fmt"
 )
 
@@ -50,8 +51,9 @@ func Dot(a, b []float64) (float64, error) {
 
 // MatVecMul is a simple matrix vector multiplier.
 func MatVecMul(W [][]float64, x []float64) ([]float64, error) {
-	if len(W) == 0 {
-		return nil, fmt.Errorf("W must have at least one row")
+	// We must check that W is strictly rectangular.
+	if err := isRectangular(W); err != nil {
+		return nil, errors.Join(errors.New("MatVecMul unable to run"), err)
 	}
 
 	output := make([]float64, len(W))
@@ -70,4 +72,25 @@ func MatVecMul(W [][]float64, x []float64) ([]float64, error) {
 	}
 
 	return output, nil
+}
+
+func isRectangular(m [][]float64) error {
+	if len(m) == 0 {
+		return fmt.Errorf("W must have at least one row")
+	}
+
+	// We check strict rectangular-ness by using the 0th elements width against
+	// all rows.
+
+	width := len(m[0])
+
+	for idx, row := range m {
+		if len(row) != width {
+			return fmt.Errorf(
+				"shape is not rectangular: row %d has length %d, expected %d",
+				idx, len(row), width)
+		}
+	}
+
+	return nil
 }

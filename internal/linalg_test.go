@@ -17,7 +17,7 @@ func TestDotProduct(t *testing.T) {
 
 		// Assert
 		assert.NoError(t, err)
-		assert.Equal(t, 40.72, product, 1e-9)
+		assert.InDelta(t, 40.72, product, 1e-9)
 	})
 
 	t.Run("Dot fails if slice1 is mismatch in size to slice 2", func(t *testing.T) {
@@ -90,28 +90,6 @@ func TestMatVecMul(t *testing.T) {
 }
 
 func TestLinearLayer(t *testing.T) {
-	t.Run("Forward runs successfully with valid input", func(t *testing.T) {
-		// Arrange
-		ll := LinearLayer{
-			In:  3,
-			Out: 2,
-			W: [][]float64{
-				{1.0, 2.3, 4.2},
-				{3.2, 0.0, 9.9},
-			},
-		}
-		x := []float64{10, 1, -2}
-
-		// Act
-		got, err := ll.Forward(x)
-
-		// Assert
-		assert.NoError(t, err)
-		assert.Len(t, got, 2)
-		assert.InDelta(t, 3.9, got[0], 1e-9)
-		assert.InDelta(t, 12.2, got[1], 1e-9)
-	})
-
 	t.Run("Forward runs successfully with valid input", func(t *testing.T) {
 		// Arrange
 		ll := LinearLayer{
@@ -224,6 +202,49 @@ func TestLinearLayer(t *testing.T) {
 		// Assert
 		assert.NoError(t, err)
 		assert.InDelta(t, y[0], y[1], 1e-9)
+	})
+
+}
+
+func TestHelpers(t *testing.T) {
+	t.Run("isRectangular returns success for a valid rectangular matrix", func(t *testing.T) {
+		// Arrange
+		example := [][]float64{
+			{4.2, 3.4, 1.9},
+			{3.2, 3.3, 2.1},
+		}
+
+		// Act
+		err := isRectangular(example)
+
+		// Assert
+		assert.NoError(t, err)
+	})
+
+	t.Run("isRectangular returns error if matrix is size 0", func(t *testing.T) {
+		// Arrange
+		example := [][]float64{}
+
+		// Act
+		err := isRectangular(example)
+
+		// Assert
+		assert.Error(t, err)
+	})
+
+	t.Run("isRectangular returns error if matrix is not a rectangle", func(t *testing.T) {
+		// Arrange
+		example := [][]float64{
+			{4.2, 3.4, 1.9},
+			{3.2, 2.1},
+			{3.2, 3.3, 2.1},
+		}
+
+		// Act
+		err := isRectangular(example)
+
+		// Assert
+		assert.Error(t, err)
 	})
 
 }

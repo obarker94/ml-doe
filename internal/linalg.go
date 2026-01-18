@@ -10,6 +10,8 @@ type LinearLayer struct {
 	W   [][]float64
 }
 
+// Forward is both a validation and a Forward computation for given weights and
+// input.
 func (l *LinearLayer) Forward(x []float64) ([]float64, error) {
 	if l.In <= 0 || l.Out <= 0 {
 		return nil, fmt.Errorf("invalid layer dims: In=%d Out=%d", l.In, l.Out)
@@ -32,6 +34,7 @@ func (l *LinearLayer) Forward(x []float64) ([]float64, error) {
 	return MatVecMul(l.W, x)
 }
 
+// Dot is an expected Dot Product given two vectors.
 func Dot(a, b []float64) (float64, error) {
 	if len(a) != len(b) {
 		return 0.0, fmt.Errorf("slices must be the same length")
@@ -45,6 +48,7 @@ func Dot(a, b []float64) (float64, error) {
 	return output, nil
 }
 
+// MatVecMul is a simple matrix vector multiplier.
 func MatVecMul(W [][]float64, x []float64) ([]float64, error) {
 	if len(W) == 0 {
 		return nil, fmt.Errorf("W must have at least one row")

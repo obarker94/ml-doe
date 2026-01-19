@@ -5,48 +5,6 @@ import (
 	"fmt"
 )
 
-type LinearLayer struct {
-	In  int
-	Out int
-	W   [][]float64
-	B   []float64
-}
-
-// Forward is both a validation and a Forward computation for given weights and
-// input.
-func (l *LinearLayer) Forward(x []float64) ([]float64, error) {
-	if l.In <= 0 || l.Out <= 0 {
-		return nil, fmt.Errorf("invalid layer dims: In=%d Out=%d", l.In, l.Out)
-	}
-
-	if len(x) != l.In {
-		return nil, fmt.Errorf("dimension mismatch: x has length %d, expected %d", len(x), l.In)
-	}
-
-	if len(l.W) != l.Out {
-		return nil, fmt.Errorf("dimension mismatch: W has %d rows, expected %d", len(l.W), l.Out)
-	}
-
-	withBias := false
-	if len(l.B) != 0 {
-		if len(l.B) != l.Out {
-			return nil, fmt.Errorf("dimension mismatch: Bias length %d, expected equal length to out %d", len(l.B), l.Out)
-		}
-		withBias = true
-	}
-
-	output, err := MatVecMul(l.W, x)
-	if err != nil {
-		return nil, errors.Join(errors.New("LinearLayer Forward failed at MatVecMul"), err)
-	}
-
-	if withBias {
-		return AddVec(output, l.B)
-	}
-
-	return output, nil
-}
-
 // Dot is an expected Dot Product given two vectors.
 func Dot(a, b []float64) (float64, error) {
 	if len(a) != len(b) {

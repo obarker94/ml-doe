@@ -9,6 +9,7 @@ type LinearLayer struct {
 	In  int
 	Out int
 	W   [][]float64
+	B   []float64
 }
 
 // Forward is both a validation and a Forward computation for given weights and
@@ -26,13 +27,24 @@ func (l *LinearLayer) Forward(x []float64) ([]float64, error) {
 		return nil, fmt.Errorf("dimension mismatch: W has %d rows, expected %d", len(l.W), l.Out)
 	}
 
-	for i := range l.W {
-		if len(l.W[i]) != l.In {
-			return nil, fmt.Errorf("dimension mismatch: W row %d has length %d, expected %d", i, len(l.W[i]), l.In)
+	withBias := false
+	if len(l.B) != 0 {
+		if len(l.B) != l.Out {
+			return nil, fmt.Errorf("dimension mismatch: Bias length %d, expected equal length to out %d", len(l.B), l.Out)
 		}
+		withBias = true
 	}
 
-	return MatVecMul(l.W, x)
+	output, err := MatVecMul(l.W, x)
+	if err != nil {
+		return nil, errors.Join(errors.New("LinearLayer Forward failed at MatVecMul"), err)
+	}
+
+	if withBias {
+		return AddVec(output, l.B)
+	}
+
+	return output, nil
 }
 
 // Dot is an expected Dot Product given two vectors.
@@ -49,7 +61,7 @@ func Dot(a, b []float64) (float64, error) {
 	return output, nil
 }
 
-// MatVecMul is a simple matrix vector multiplier.
+// MatVecMul is a matric vector multiplier with an optional bias vector
 func MatVecMul(W [][]float64, x []float64) ([]float64, error) {
 	// We must check that W is strictly rectangular.
 	if err := isRectangular(W); err != nil {
@@ -69,6 +81,22 @@ func MatVecMul(W [][]float64, x []float64) ([]float64, error) {
 		}
 
 		output[idx] = product
+	}
+
+	return output, nil
+}
+
+// AddVec takes in vector of length D and bias vector of equal length and then
+// adds the bias to each scalar.
+func AddVec(v []float64, b []float64) ([]float64, error) {
+	if len(b) != len(v) {
+		return nil, fmt.Errorf("bias length %d is not equal to input vector length %d", len(b), len(v))
+	}
+
+	output := make([]float64, len(v))
+
+	for idx := range b {
+		output[idx] = v[idx] + b[idx]
 	}
 
 	return output, nil
